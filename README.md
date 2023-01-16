@@ -5,7 +5,7 @@ Un script python pour configurer automatiquement 3 switches Cisco
 Le script permet de créer un fichier de configuration pour 3 switches Cisco en choisissant :
  - Quel Vlan utiliser
  - Pour chaque interface si elle est en mode trunk ou accès
- - Si les switches sont GigagabitEthernet ou Fastethernet
+ - Si les switches sont GigabitEthernet ou FastEthernet
  - Si le switch à une adress IP
  - Si le switch à des interfaces en Etherchannel
 
@@ -16,7 +16,11 @@ Télécharger le script sur cette page en allant dans les releases :
 
 ![Screen Releases](https://github.com/xXDrkLeoXx/Autoconfig/blob/main/.readmefiles/release.png "Il faut cliquer sur Autoconfig.py")
 
-Lancer le script en étant dans le répertoire ou se situe le script :
- - En tapant la commande `./Autoconfig.py` (peut ne pas marcher selon la gestion des droits d'éxecution)
- - En tapant la commande `python Autoconfig.py`
+Lancer le terminal et aller dans le dossier ou se situe votre fichier Autoconfig.py
+
+Une fois dans le dossier, Pour lancer le scrit vous pouvez faire la commande :
+ - `./Autoconfig.py` (peut ne pas marcher selon la gestion des droits d'éxecution)
+ - Ou `python Autoconfig.py` (fonctionne tout le temps)
+
+ Ensuite laissez vous guider par les questions
  
