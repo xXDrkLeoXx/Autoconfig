@@ -205,20 +205,25 @@ def FastEthernet(LIST, vlan):
         ExMark(LIST,1)
    
 def ConfigSwitchIP(LIST):
-    try:
-        ip = input("Entrez l'adresse IP : ")
-        masque = input("Entrez le masque de l'adresse IP sous la forme décimal (255.255.255.0 par exemple) : ")
-        LIST.append("interface vlan" + str(vlan) + "\n")
-        LIST.append(" ip address " + ip + " " + masque + "\n")
-        ExMark(LIST, 2)
-        LIST.append("line vty 0 4\n")
-        LIST.append(" password bonjour\n")
-        LIST.append(" login\n")
+    ip = input("Entrez l'adresse IP : ")
+    print("Entez le masque en forme slash (par exemple pour /29, entrez 29)")
+    masquePointe = InputNum(32)
+    masque = slashtToPointe(masquePointe)
+    LIST.append("interface vlan" + str(vlan) + "\n")
+    LIST.append(" ip address " + ip + " " + masque + "\n")
+    ExMark(LIST, 2)
+    LIST.append("line vty 0 4\n")
+    LIST.append(" password bonjour\n")
+    LIST.append(" login\n")
 
-    except:
-        print(f"{bcolors.FAIL}Erreur dans la configuration de l'adresse IP{bcolors.ENDC}")
-
-
+def slashtToPointe(cidr): # trouver ici : https://stackoverflow.com/questions/33750233/convert-cidr-to-subnet-mask-in-python
+  cidr = int(cidr)
+  mask = (0xffffffff >> (32 - cidr)) << (32 - cidr)
+  return (str( (0xff000000 & mask) >> 24)   + '.' +
+          str( (0x00ff0000 & mask) >> 16)   + '.' +
+          str( (0x0000ff00 & mask) >> 8)    + '.' +
+          str( (0x000000ff & mask)))
+  
 
 
 def ConfInt(LIST,vlan):
@@ -285,6 +290,7 @@ def configSwitch(name, vlan):
     ExMark(DEBUT,2)
     DEBUT.append("spanning-tree mode pvst\n")
     DEBUT.append("spanning-tree vlan 1-4096 priority " + str(prio) + "\n")
+    ExMark(DEBUT,5)
     
     FIN.append("exit\n")
     ExMark(FIN, 2)
@@ -294,11 +300,11 @@ def configSwitch(name, vlan):
 
     with open(name + ".txt", "w") as f:
         for line in DEBUT:
-            print(line, end='')
+            f.write(line)
         for line in CONFINT:
-            print(line, end='')
+            f.write(line)
         for line in FIN:
-            print(line, end='')
+            f.write(line)
                         
 
 if __name__ == "__main__":
