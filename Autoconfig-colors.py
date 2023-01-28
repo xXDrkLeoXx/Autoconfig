@@ -1,4 +1,6 @@
 #! /usr/bin/env python3
+import os.path
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -11,30 +13,42 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 etherInt = [False, False, False, False, False, False, False, False]
+YN =["OUI","NON",""]
 
-def InputNum():
+def InputTxt(LSTRP, PROMPT):
+    print(PROMPT)
+    Inp = input(" -> ")
+    if Inp.upper() not in LSTRP:
+        print(f"{bcolors.FAIL}Valeurs non comprise{bcolors.ENDC}")
+        return InputTxt(LSTRP, PROMPT)
+    else:
+        return Inp.upper()
+
+def InputNum(RANGE):
     try:
         Num = int(input("-> "))
+        if Num > RANGE:
+            print(f"{bcolors.WARNING}Valeur trop grande{bcolors.ENDC}")
+            return InputNum(RANGE)
         return Num
     except:
         print(f"{bcolors.FAIL}Valeur non numérique{bcolors.ENDC}")
-        return InputNum()
+        return InputNum(RANGE)
 
-
-def ExMark(file, nbLigne): # bah c'est pour mettre plein de poin d'exclamation
+def ExMark(LIST, nbLigne): # bah c'est pour mettre plein de poin d'exclamation
     for i in range(nbLigne):
-        file.write("!\n")
+        LIST.append("!\n")
 
-def trunkinginterface(file, vlan): # fonction appeler pour configuer une interface en mode trunk
-    file.write(" switchport trunk allowed vlan " + str(vlan) + "\n")
-    file.write(" switchport trunk encapsulation dot1q\n")
-    file.write(" switchport mode trunk\n")
-    file.write(" switchport nonegotiate\n")
+def trunkinginterface(LIST, vlan): # fonction appeler pour configuer une interface en mode trunk
+    LIST.append(" switchport trunk allowed vlan " + str(vlan) + "\n")
+    LIST.append(" switchport trunk encapsulation dot1q\n")
+    LIST.append(" switchport mode trunk\n")
+    LIST.append(" switchport nonegotiate\n")
     
-def accessInterface(file,vlan): # fonction appeler pour configuer une interface en mode accès
-    file.write(" switchport access vlan " + str(vlan) + "\n")
-    file.write(" switchport mode access\n")
-    file.write(" switchport nonegoiate\n")
+def accessInterface(LIST, vlan): # fonction appeler pour configuer une interface en mode accès
+    LIST.append(" switchport access vlan " + str(vlan) + "\n")
+    LIST.append(" switchport mode access\n")
+    LIST.append(" switchport nonegotiate\n")
 
 def translation(str):
     match str:
@@ -48,9 +62,11 @@ def translation(str):
             return "non configuré"
 
 def confInt(Interface, Tabconf):
-    mode = input("Mode de Configuration\nVous aver le choix entre :\n * tr pour Trunking\n * ac pour mode accès\n * eth pour Etherchannel\n-> ")
+    txt = "Mode de Configuration\nVous aver le choix entre :\n * tr pour Trunking\n * ac pour mode accès\n * eth pour Etherchannel"
+    Resp = ["TR","AC","ETH"]
+    mode = InputTxt(Resp,txt)
     
-    match mode.upper():
+    match mode:
         case "TR":
             print("Interface mis en mode Trunk\n")
             Tabconf[Interface] = "TR"
@@ -64,7 +80,7 @@ def confInt(Interface, Tabconf):
             print(f"{bcolors.WARNING}Configuration non reconnue, configuration de l'interface non modifiée\n{bcolors.ENDC}")
     return Tabconf
  
-def GigabitEthernet(f, vlan):
+def GigabitEthernet(LIST, vlan):
     conf = True
     Tabconf = ["","","","","","","",""]
     
@@ -73,35 +89,35 @@ def GigabitEthernet(f, vlan):
         print(" * Taper un nombre entre 1 et 8 pour configurer l'interface correspondante")
         print(" * taper 9 pour voir la configuration de chaque interface")
         print(" * taper 0 pour finir la configuration des interfaces")
-        Interface = InputNum()
+        Interface = InputNum(9)
         
         match Interface:
             case 0:
                 conf = False
                 print("Fin de la configuration des interfaces\n")
             case 1:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(0, Tabconf)
             case 2:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(1, Tabconf)
             case 3:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(2, Tabconf)
             case 4:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(3, Tabconf)
             case 5:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(4, Tabconf)
             case 6:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(5, Tabconf)
             case 7:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(6, Tabconf)
             case 8:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(7, Tabconf)
             case 9:
                 for i in range(8):
@@ -110,23 +126,23 @@ def GigabitEthernet(f, vlan):
             case _:
                 print(f"{bcolors.WARNING}Nombre non valide{bcolors.ENDC}")
     if Tabconf.count("ETH") > 0:
-        f.write("interface Port-channel1\n")
-        trunkinginterface(f,vlan)
-        ExMark(f,1)        
+        LIST.append("interface Port-channel1\n")
+        trunkinginterface(LIST,vlan)
+        ExMark(LIST,1)        
         
     for Interface in range(8):
-        f.write("interface GigabiEthernet0/"+str(Interface+1) + "\n")
+        LIST.append("interface GigabitEthernet0/"+str(Interface+1) + "\n")
         match Tabconf[Interface]:
             case "TR":
-                trunkinginterface(f, vlan)
+                trunkinginterface(LIST, vlan)
             case "AC":
-                accessInterface(f, vlan)
+                accessInterface(LIST, vlan)
             case"ETH":
-                trunkinginterface(f,vlan)
-                f.write(" channel-group 1 mode active\n")
-        ExMark(f,1)
+                trunkinginterface(LIST,vlan)
+                LIST.append(" channel-group 1 mode active\n")
+        ExMark(LIST,1)
 
-def FastEthernet(f, vlan):
+def FastEthernet(LIST, vlan):
     conf = True
     Tabconf = ["","","","","","","",""]
     
@@ -142,28 +158,28 @@ def FastEthernet(f, vlan):
                 conf = False
                 print("Fin de la configuration des interfaces\n")
             case 1:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(0, Tabconf)
             case 2:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(1, Tabconf)
             case 3:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(2, Tabconf)
             case 4:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(3, Tabconf)
             case 5:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(4, Tabconf)
             case 6:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(5, Tabconf)
             case 7:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(6, Tabconf)
             case 8:
-                print("vous modifié l'iterface "+ str(Interface))
+                print("vous modifié l'interface "+ str(Interface))
                 Tabconf = confInt(7, Tabconf)
             case 9:
                 for i in range(8):
@@ -172,78 +188,117 @@ def FastEthernet(f, vlan):
             case _:
                 print(f"{bcolors.WARNING}Nombre non valide{bcolors.ENDC}")
     if Tabconf.count("ETH") > 0:
-        f.write("interface Port-channel1\n")
-        trunkinginterface(f,vlan)
-        ExMark(f,1)        
+        LIST.append("interface Port-channel1\n")
+        trunkinginterface(LIST,vlan)
+        ExMark(LIST,1)        
         
     for Interface in range(8):
-        f.write("interface FastEthernet0/"+str(Interface+1) + "\n")
+        LIST.append("interface FastEthernet0/"+str(Interface+1) + "\n")
         match Tabconf[Interface]:
             case "TR":
-                trunkinginterface(f, vlan)
+                trunkinginterface(LIST, vlan)
             case "AC":
-                accessInterface(f, vlan)
+                accessInterface(LIST, vlan)
             case"ETH":
-                trunkinginterface(f,vlan)
-                f.write(" channel-group 1 mode active\n")
-        ExMark(f,1)
+                trunkinginterface(LIST,vlan)
+                LIST.append(" channel-group 1 mode active\n")
+        ExMark(LIST,1)
    
+def ConfigSwitchIP(LIST):
+    try:
+        ip = input("Entrez l'adresse IP : ")
+        masque = input("Entrez le masque de l'adresse IP sous la forme décimal (255.255.255.0 par exemple) : ")
+        LIST.append("interface vlan" + str(vlan) + "\n")
+        LIST.append(" ip address " + ip + " " + masque + "\n")
+        ExMark(LIST, 2)
+        LIST.append("line vty 0 4\n")
+        LIST.append(" password bonjour\n")
+        LIST.append(" login\n")
+
+    except:
+        print(f"{bcolors.FAIL}Erreur dans la configuration de l'adresse IP{bcolors.ENDC}")
+
+
+
+
+def ConfInt(LIST,vlan):
+    txt = "\nInterfaces GigabitEthernet (Gi) ou FastEthernet (Fa) ?\nEcriver Gi ou Fa :" 
+    debi = InputTxt(["GI","FA",""],txt)
     
+    match debi:
+        case "FA":
+            print("Switch FastEthernet sélectionné\n")
+            FastEthernet(LIST, vlan)
+        case "GI":
+            print("Switch GigabitEthernet sélectionné\n")
+            GigabitEthernet(LIST, vlan)
+        case _:
+            print(f"{bcolors.WARNING}Switch GigabitEthernet automatiquement sélectionné\n{bcolors.ENDC}")
+            GigabitEthernet(LIST, vlan)
+    
+
 def configSwitch(name, vlan):
-            
-    with open(name + ".txt", "w") as f:
-        f.write("hostname " + name + "\n")
-        ExMark(f,2)
-        f.write("enable password bonjour\n")
-        ExMark(f,3)
-        f.write("no ip domain-lookup\n")
-        ExMark(f,2)
-        f.write("spanning-tree mode pvst\n")
-        try:
-            BoolPrio = input("Souhaiter vous modifier la priorite du switch \nde base non, écriver oui si vous souhaitez la modifier :\n -> ")
-            
-            if BoolPrio.upper() == "OUI":
+    DEBUT = []
+    CONFINT = []
+    FIN = []
+    mdp = "bonjour"
+    prio = 32768
+    
+    if os.path.isfile(name + ".txt"):
+        print(f"{bcolors.WARNING}Un fichier {name}.txt existe déja, vouler vous le remplacer ?{bcolors.ENDC}")
+        txt = "Entrez Non pour passer à la configuration du switch suivant, laisser vide pour continer la configuration de ce switch\n"
+        val = InputTxt(YN, txt)
+        if val == "NON":
+            return None
+        else:
+            print(f"{bcolors.WARNING}Fichier {name}.txt écrasé{bcolors.ENDC}\n")
+
+    ConfMode = True
+    while ConfMode:
+        txt = "Configuration du switch :\n * NAME pour changer le nom du switch (actuellement " + name + ")\n * MDP pour mettre un mdp (actuellement " + mdp + ")\n * PRIO pour changer la prioriter (actuellement " + str(prio) + ")\n * INT pour configurer les interfaces\n * IP pour donner une adresse IP au switch\n * 0 pour quitter\n"
+        
+        ConfModes = ["0","INT","PRIO","IP","NAME","MDP"]
+        SelecConf = InputTxt(ConfModes, txt)
+        match SelecConf:
+            case "NAME":
+                print("\nEntrez le nouveau nom du switch :")
+                name = input(" -> ")
+            case "MDP":
+                print("\nEntrez le nouveau mot de passe du switch :")
+                mdp = input(" -> ")
+            case "PRIO":
                 print("Le numéro de priorité doit être un multiple de 4096 (soit 0/4096/8192/122288/16384/20480/24576/28672/32768/36864/40960/45056/49152/53248/57344/61440/65536/69632/73728/77824/81920)")
-                prio = InputNum()
-                f.write("spanning-tree vlan 1-4096 priority " + str(prio) + "\n")
-        except:
-            print("Priorité non modifiée\n")
-        ExMark(f, 5)
-        
-        print("\nSwitch GigabitEthernet (Gi) ou FastEthernet (Fa) ?")
-        
-        debi = input("Ecriver Gi ou Fa (de base Gi sélectionné) :\n -> ")
-        
-        match debi.upper():
-            case "FA":
-                print("Switch FastEthernet sélectionné\n")
-                FastEthernet(f, vlan)
-            case "GI":
-                print("Switch GigabitEthernet sélectionné\n")
-                GigabitEthernet(f, vlan)
-            case _:
-                print(f"{bcolors.WARNING}Switch GigabitEthernet automatiquement sélectionné\n{bcolors.ENDC}")
-                GigabitEthernet(f, vlan)
-        
-        BoolIp = input("Le switch " + name + " à t'il une adresse IP pour se connecter en telnet ou ssh ?\ntaper oui pour configurer l'adresse IP, sinon laisser vide : ")
-        if BoolIp.upper() == "OUI":
-            try:
-                ip = input("Entrez l'adresse IP : ")
-                masque = input("Entrez le masque de l'adresse IP sous la forme décimal (255.255.255.0 par exemple) : ")
-                f.write("interface vlan" + str(vlan) + "\n")
-                f.write(" ip address " + ip + " " + masque + "\n")
-                ExMark(f, 2)
-                f.write("line vty 0 4\n")
-                f.write(" password bonjour\n")
-                f.write(" login\n")
-        
-            except:
-                print(f"{bcolors.FAIL}Erreur dans la configuration de l'adresse IP{bcolors.ENDC}")
-        
-        ExMark(f, 2)
-        f.write("no cdp run\n")
-        ExMark(f, 4)
-        f.write("end\n")
+                prio = InputNum(81920)
+            case "IP":
+                ConfigSwitchIP(FIN)
+            
+            case "INT":
+                ConfInt(CONFINT,vlan)
+            case "0":
+                ConfMode = False
+                
+    DEBUT.append("hostname " + name + "\n")
+    ExMark(DEBUT,2)
+    DEBUT.append("enable password " + mdp + "\n")
+    ExMark(DEBUT,3)
+    DEBUT.append("no ip domain-lookup\n")
+    ExMark(DEBUT,2)
+    DEBUT.append("spanning-tree mode pvst\n")
+    DEBUT.append("spanning-tree vlan 1-4096 priority " + str(prio) + "\n")
+    
+    FIN.append("exit\n")
+    ExMark(FIN, 2)
+    FIN.append("no cdp run\n")
+    ExMark(FIN, 4)
+    FIN.append("end\n")
+
+    with open(name + ".txt", "w") as f:
+        for line in DEBUT:
+            print(line, end='')
+        for line in CONFINT:
+            print(line, end='')
+        for line in FIN:
+            print(line, end='')
                         
 
 if __name__ == "__main__":
@@ -252,7 +307,7 @@ if __name__ == "__main__":
     print("-----------------------------------------------------------------------------------------------\n")
     print("pour commencer, entrer le numéro du vlan que vous utiliserer pour connecter vos machines :")
 
-    vlan = InputNum()
+    vlan = InputNum(4096)
     print("Le numéro du vlan choisis est "+ str(vlan) + "\n")
 
     for switch in range(3):
